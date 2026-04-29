@@ -8,8 +8,8 @@ import { COLOR, FONT_DISPLAY, FONT_MONO, formatMoney, formatDate } from "../lib/
 import { StatusBadge, Badge } from "./UI.jsx";
 
 export default function RaceCard({ race, onOpen }) {
-  const totalCars = race.TotalCars || 0;
-  const taken = race.ParticipantCount || 0;
+  const totalCars = Number(race.TotalCars) || 0;
+  const taken = Number(race.ParticipantCount) || 0;
   const pct = totalCars ? Math.round((taken / totalCars) * 100) : 0;
   const pot = Number(race.Pot || 0);
 

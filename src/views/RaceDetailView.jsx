@@ -176,9 +176,12 @@ export default function RaceDetailView({ raceId, currentUser, onBack, onChanged 
   }, [raceId]);
 
   useEffect(() => {
+    // Reset pour éviter d'afficher des données d'une autre course pendant le chargement
+    setData(null);
     setLoading(true);
+    setError("");
     reload();
-  }, [reload]);
+  }, [raceId, reload]);
 
   const handleConfirmJoin = async () => {
     setShowJoin(false);
@@ -212,8 +215,8 @@ export default function RaceDetailView({ raceId, currentUser, onBack, onChanged 
   const myEntry = participants.find(
     (p) => String(p.UserId).toLowerCase() === String(currentUser.userId).toLowerCase()
   );
-  const totalCars = race.TotalCars || 0;
-  const taken = race.ParticipantCount || 0;
+  const totalCars = Number(race.TotalCars) || 0;
+  const taken = Number(race.ParticipantCount) || 0;
   const pot = Number(race.Pot || 0);
   const winnerEntry = race.WinningCarNumber
     ? participants.find((p) => String(p.CarNumber) === String(race.WinningCarNumber))

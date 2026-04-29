@@ -313,8 +313,8 @@ export default function AdminView({ onOpenRace, refreshKey, onChanged }) {
       ) : (
         <div className="space-y-3">
           {races.map((r) => {
-            const taken = r.ParticipantCount || 0;
-            const total = r.TotalCars || 0;
+            const taken = Number(r.ParticipantCount) || 0;
+            const total = Number(r.TotalCars) || 0;
             const pot = Number(r.Pot || 0);
             return (
               <div
