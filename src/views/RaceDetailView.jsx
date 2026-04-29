@@ -57,22 +57,27 @@ function NumberTile({ car, holderUsername, isWinner, isMine, isAvailable }) {
         border,
         opacity: holderUsername || isAvailable ? 1 : 0.55,
       }}
-      className="aspect-[5/6] p-2 flex flex-col items-center justify-between text-center transition-all"
+      className="aspect-square sm:aspect-[5/6] p-1.5 sm:p-2 flex flex-col items-center justify-center sm:justify-between text-center transition-all overflow-hidden"
     >
-      <div className="w-full">
+      <div className="hidden sm:block w-full">
         {isWinner && <Trophy size={14} className="mx-auto mb-0.5" style={{ color: "#000" }} />}
         {!isWinner && isMine && <Sparkles size={12} className="mx-auto mb-0.5" />}
       </div>
       <div
-        style={{ fontFamily: FONT_MONO, fontWeight: 800, letterSpacing: -1 }}
-        className="text-3xl sm:text-4xl leading-none"
+        style={{
+          fontFamily: FONT_MONO,
+          fontWeight: 800,
+          letterSpacing: -1,
+          fontSize: "clamp(20px, 7vw, 36px)",
+        }}
+        className="leading-none flex items-center justify-center flex-1 sm:flex-initial"
       >
         {car.CarNumber}
       </div>
-      <div className="w-full min-h-[28px]">
+      <div className="w-full">
         {car.DriverName && (
           <div
-            className="text-[9px] uppercase tracking-wider truncate leading-tight opacity-70"
+            className="hidden sm:block text-[9px] uppercase tracking-wider truncate leading-tight opacity-70"
             style={{ fontFamily: FONT_BODY }}
           >
             {car.DriverName}
@@ -80,7 +85,7 @@ function NumberTile({ car, holderUsername, isWinner, isMine, isAvailable }) {
         )}
         {holderUsername && (
           <div
-            className="text-[10px] font-bold truncate leading-tight"
+            className="text-[9px] sm:text-[10px] font-bold truncate leading-tight"
             style={{ fontFamily: FONT_BODY }}
           >
             {holderUsername}
@@ -204,7 +209,9 @@ export default function RaceDetailView({ raceId, currentUser, onBack, onChanged 
   }
 
   const { race, grid, participants } = data;
-  const myEntry = participants.find((p) => p.UserId === currentUser.userId);
+  const myEntry = participants.find(
+    (p) => String(p.UserId).toLowerCase() === String(currentUser.userId).toLowerCase()
+  );
   const totalCars = race.TotalCars || 0;
   const taken = race.ParticipantCount || 0;
   const pot = Number(race.Pot || 0);
@@ -338,14 +345,16 @@ export default function RaceDetailView({ raceId, currentUser, onBack, onChanged 
           >
             Grille des numéros
           </h2>
-          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 gap-1.5 sm:gap-2">
             {[...grid]
               .sort((a, b) => Number(a.CarNumber) - Number(b.CarNumber))
               .map((cell) => {
                 const isWinner =
                   race.Status === "finished" &&
                   String(race.WinningCarNumber) === String(cell.CarNumber);
-                const isMine = cell.HolderUserId === currentUser.userId;
+                const isMine =
+                  String(cell.HolderUserId || "").toLowerCase() ===
+                  String(currentUser.userId || "").toLowerCase();
                 return (
                   <NumberTile
                     key={cell.CarId}
@@ -407,7 +416,8 @@ export default function RaceDetailView({ raceId, currentUser, onBack, onChanged 
                     <div className="flex-1 min-w-0">
                       <div className="font-bold truncate">
                         {p.Username}
-                        {p.UserId === currentUser.userId && (
+                        {String(p.UserId).toLowerCase() ===
+                          String(currentUser.userId).toLowerCase() && (
                           <span
                             className="ml-2 text-[10px] uppercase tracking-wider"
                             style={{ color: COLOR.red }}
