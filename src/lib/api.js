@@ -92,11 +92,21 @@ export const api = {
     post(`/api/admin/races/${raceId}/winner`, { carNumber }),
 
   // Admin — voitures
-  addCar: (raceId, { carNumber, driverName }) =>
-    post(`/api/admin/races/${raceId}/cars`, { carNumber, driverName }),
+  addCar: (raceId, { carNumber, driverName, startPosition }) =>
+    post(`/api/admin/races/${raceId}/cars`, {
+      carNumber,
+      driverName,
+      startPosition,
+    }),
   addCarsBulk: (raceId, cars) =>
     post(`/api/admin/races/${raceId}/cars/bulk`, { cars }),
   removeCar: (carId) => del(`/api/admin/cars/${carId}`),
+  updateCarPosition: (carId, startPosition) =>
+    patch(`/api/admin/cars/${carId}/position`, { startPosition }),
+
+  // Admin — révéler/cacher les numéros (feature 1)
+  revealNumbers: (raceId, reveal) =>
+    post(`/api/admin/races/${raceId}/reveal`, { reveal }),
 
   // Admin — utilisateurs
   listUsers: () => get("/api/admin/users"),

@@ -4,7 +4,7 @@
 // =============================================================================
 
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Check, Trophy } from "lucide-react";
+import { Plus, Trash2, Check, Trophy, Sparkles } from "lucide-react";
 import { Modal, Btn, Input, ErrorBanner, StatusBadge } from "../components/UI.jsx";
 import { COLOR, FONT_BODY, FONT_MONO, formatMoney } from "../lib/format.js";
 import { api } from "../lib/api.js";
@@ -50,7 +50,7 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
 
   // Formulaires
   const [info, setInfo] = useState({ name: "", date: "", description: "", entryFee: "0" });
-  const [carForm, setCarForm] = useState({ number: "", driver: "" });
+  const [carForm, setCarForm] = useState({ number: "", driver: "", position: "" });
   const [bulkInput, setBulkInput] = useState("");
   const [winnerNumber, setWinnerNumber] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -119,25 +119,53 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
     const n = carForm.number.trim();
     if (!n) return;
     safeRun(async () => {
-      await api.addCar(raceId, { carNumber: n, driverName: carForm.driver.trim() || null });
-      setCarForm({ number: "", driver: "" });
+      await api.addCar(raceId, {
+        carNumber: n,
+        driverName: carForm.driver.trim() || null,
+        startPosition: carForm.position.trim() || null,
+      });
+      setCarForm({ number: "", driver: "", position: "" });
       await reload();
     });
   };
 
+  const updateCarPosition = (carId, value) =>
+    safeRun(async () => {
+      await api.updateCarPosition(carId, value === "" ? null : Number(value));
+      await reload();
+    });
+
+  const toggleReveal = () =>
+    safeRun(async () => {
+      await api.revealNumbers(raceId, !race.NumbersRevealed);
+      await reload();
+    });
+
   const addBulk = () => {
     const lines = bulkInput
-      .split(/[\n,]/)
+      .split(/\n/)
       .map((l) => l.trim())
       .filter(Boolean);
     const cars = [];
     for (const line of lines) {
-      const match = line.match(/^([^\s,\-]+)(?:\s*[-,:]\s*(.+))?$/);
-      if (!match) continue;
-      cars.push({
-        carNumber: match[1].trim(),
-        driverName: (match[2] || "").trim() || null,
-      });
+      // Formats acceptés :
+      //   44
+      //   44 - Lewis Hamilton
+      //   44, Lewis Hamilton
+      //   44 - Lewis Hamilton - 7   (avec position en 3e)
+      //   44, Lewis Hamilton, 7
+      const parts = line.split(/\s*[-,:]\s*/);
+      if (parts.length === 0) continue;
+      const carNumber = parts[0].trim();
+      if (!carNumber) continue;
+      let driverName = null;
+      let startPosition = null;
+      if (parts.length >= 2) driverName = parts[1].trim() || null;
+      if (parts.length >= 3) {
+        const p = parts[2].trim().replace(/[^0-9]/g, "");
+        if (p) startPosition = Number(p);
+      }
+      cars.push({ carNumber, driverName, startPosition });
     }
     if (cars.length === 0) return;
     safeRun(async () => {
@@ -265,7 +293,23 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
                   border: `1px solid ${COLOR.border}`,
                   color: COLOR.text,
                   fontFamily: FONT_MONO,
-                  width: 100,
+                  width: 80,
+                }}
+                className="px-3 py-2 outline-none focus:border-white"
+              />
+              <input
+                value={carForm.position}
+                onChange={(e) =>
+                  setCarForm({ ...carForm, position: e.target.value.replace(/[^0-9]/g, "") })
+                }
+                placeholder="Pos"
+                title="Position de départ (optionnel)"
+                style={{
+                  backgroundColor: COLOR.bgRaised,
+                  border: `1px solid ${COLOR.border}`,
+                  color: COLOR.text,
+                  fontFamily: FONT_MONO,
+                  width: 70,
                 }}
                 className="px-3 py-2 outline-none focus:border-white"
               />
@@ -298,7 +342,7 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
               onChange={(e) => setBulkInput(e.target.value)}
               rows={4}
               placeholder={
-                "Une ligne par voiture, format:\n44 - Lewis Hamilton\n16 - Charles Leclerc\n1, Max Verstappen\n77"
+                "Une ligne par voiture. Formats acceptés:\n44\n44 - Lewis Hamilton\n44 - Lewis Hamilton - 7  (position 7)\n16, Charles Leclerc, 3"
               }
               style={{
                 backgroundColor: COLOR.bgRaised,
@@ -328,52 +372,90 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
                 style={{ border: `1px solid ${COLOR.border}` }}
               >
                 {[...grid]
-                  .sort((a, b) => Number(a.CarNumber) - Number(b.CarNumber))
-                  .map((c, i) => (
-                    <div
-                      key={c.CarId}
-                      className="flex items-center gap-3 p-3"
-                      style={{
-                        backgroundColor: COLOR.bg,
-                        borderTop: i === 0 ? "none" : `1px solid ${COLOR.border}`,
-                      }}
-                    >
+                  .sort((a, b) => {
+                    const posA = a.StartPosition;
+                    const posB = b.StartPosition;
+                    if (posA != null && posB != null) return posA - posB;
+                    if (posA != null) return -1;
+                    if (posB != null) return 1;
+                    return Number(a.CarNumber) - Number(b.CarNumber);
+                  })
+                  .map((c, i) => {
+                    const holders = c.Holders || [];
+                    return (
                       <div
+                        key={c.CarId}
+                        className="flex items-center gap-3 p-3"
                         style={{
-                          fontFamily: FONT_MONO,
-                          fontWeight: 800,
-                          backgroundColor: COLOR.bgCard,
-                          width: 56,
+                          backgroundColor: COLOR.bg,
+                          borderTop: i === 0 ? "none" : `1px solid ${COLOR.border}`,
                         }}
-                        className="text-center py-2"
                       >
-                        {c.CarNumber}
-                      </div>
-                      <div className="flex-1 text-sm">
-                        <div className="font-semibold">
-                          {c.DriverName || (
-                            <span style={{ color: COLOR.muted }}>
-                              — pilote non renseigné —
-                            </span>
+                        <div
+                          style={{
+                            fontFamily: FONT_MONO,
+                            fontWeight: 800,
+                            backgroundColor: COLOR.bgCard,
+                            width: 56,
+                          }}
+                          className="text-center py-2"
+                        >
+                          {c.CarNumber}
+                        </div>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          defaultValue={c.StartPosition ?? ""}
+                          onBlur={(e) => {
+                            const v = e.target.value.trim();
+                            const current = c.StartPosition ?? "";
+                            if (String(v) !== String(current)) {
+                              updateCarPosition(c.CarId, v);
+                            }
+                          }}
+                          placeholder="Pos"
+                          title="Position de départ"
+                          style={{
+                            backgroundColor: COLOR.bgCard,
+                            border: `1px solid ${COLOR.border}`,
+                            color: COLOR.text,
+                            fontFamily: FONT_MONO,
+                            width: 50,
+                          }}
+                          className="px-2 py-1 outline-none focus:border-white text-center text-sm"
+                        />
+                        <div className="flex-1 text-sm min-w-0">
+                          <div className="font-semibold truncate">
+                            {c.DriverName || (
+                              <span style={{ color: COLOR.muted }}>
+                                — pilote non renseigné —
+                              </span>
+                            )}
+                          </div>
+                          {holders.length > 0 && (
+                            <div className="text-xs" style={{ color: COLOR.gold }}>
+                              Pigé par{" "}
+                              {holders
+                                .map(
+                                  (h) =>
+                                    `${h.HolderUsername}${h.DrawRound > 1 ? ` (T${h.DrawRound})` : ""}`
+                                )
+                                .join(", ")}
+                            </div>
                           )}
                         </div>
-                        {c.HolderUsername && (
-                          <div className="text-xs" style={{ color: COLOR.gold }}>
-                            Pigé par {c.HolderUsername}
-                          </div>
-                        )}
+                        <button
+                          onClick={() => removeCar(c.CarId)}
+                          className="p-2 hover:opacity-70"
+                          style={{ color: COLOR.muted }}
+                          disabled={holders.length > 0 || busy}
+                          title={holders.length > 0 ? "Voiture déjà pigée" : "Retirer"}
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => removeCar(c.CarId)}
-                        className="p-2 hover:opacity-70"
-                        style={{ color: COLOR.muted }}
-                        disabled={!!c.HolderUsername || busy}
-                        title={c.HolderUsername ? "Voiture déjà pigée" : "Retirer"}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             </div>
           )}
@@ -414,6 +496,45 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
               onClick={() => setTab("winner")}
               disabled={busy}
             />
+          </div>
+
+          {/* Bouton "Démarrer la course" — révèle qui a pigé quel pilote */}
+          <div
+            className="p-4 mt-6"
+            style={{
+              backgroundColor: COLOR.bg,
+              border: `2px solid ${race.NumbersRevealed ? COLOR.gold : COLOR.red}`,
+            }}
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <Sparkles
+                size={20}
+                style={{ color: race.NumbersRevealed ? COLOR.gold : COLOR.red }}
+              />
+              <div>
+                <div className="font-bold uppercase tracking-wider text-sm mb-1">
+                  {race.NumbersRevealed
+                    ? "Numéros révélés"
+                    : "Numéros cachés (avant la course)"}
+                </div>
+                <div className="text-xs" style={{ color: COLOR.muted }}>
+                  {race.NumbersRevealed
+                    ? "Tous les utilisateurs voient qui a pigé chaque pilote."
+                    : "Chaque utilisateur ne voit que son propre numéro. Clique 'Démarrer la course' au moment du départ pour tout révéler."}
+                </div>
+              </div>
+            </div>
+            <Btn
+              variant={race.NumbersRevealed ? "ghost" : "gold"}
+              onClick={toggleReveal}
+              disabled={busy}
+              className="w-full"
+            >
+              <Sparkles size={16} />
+              {race.NumbersRevealed
+                ? "Cacher à nouveau les numéros"
+                : "Démarrer la course (révéler tout)"}
+            </Btn>
           </div>
         </div>
       )}
