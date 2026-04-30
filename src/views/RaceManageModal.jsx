@@ -148,21 +148,21 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
       .filter(Boolean);
     const cars = [];
     for (const line of lines) {
-      // Formats acceptés :
+      // Format : numéro | nom du pilote | position
+      // Exemples valides :
       //   44
-      //   44 - Lewis Hamilton
-      //   44, Lewis Hamilton
-      //   44 - Lewis Hamilton - 7   (avec position en 3e)
-      //   44, Lewis Hamilton, 7
-      const parts = line.split(/\s*[-,:]\s*/);
+      //   44 | Lewis Hamilton
+      //   44 | Lewis Hamilton | 7
+      //   92 | Jean-Frédérique LABERGE | 1   (le tiret dans le nom est OK)
+      const parts = line.split("|").map((p) => p.trim());
       if (parts.length === 0) continue;
-      const carNumber = parts[0].trim();
+      const carNumber = parts[0];
       if (!carNumber) continue;
       let driverName = null;
       let startPosition = null;
-      if (parts.length >= 2) driverName = parts[1].trim() || null;
-      if (parts.length >= 3) {
-        const p = parts[2].trim().replace(/[^0-9]/g, "");
+      if (parts.length >= 2 && parts[1]) driverName = parts[1];
+      if (parts.length >= 3 && parts[2]) {
+        const p = parts[2].replace(/[^0-9]/g, "");
         if (p) startPosition = Number(p);
       }
       cars.push({ carNumber, driverName, startPosition });
@@ -342,7 +342,7 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
               onChange={(e) => setBulkInput(e.target.value)}
               rows={4}
               placeholder={
-                "Une ligne par voiture. Formats acceptés:\n44\n44 - Lewis Hamilton\n44 - Lewis Hamilton - 7  (position 7)\n16, Charles Leclerc, 3"
+                "Une ligne par voiture, séparateur = | (pipe)\n\nFormats acceptés :\n44\n44 | Lewis Hamilton\n44 | Lewis Hamilton | 7    (avec position 7)\n92 | Jean-Frédérique LABERGE | 1"
               }
               style={{
                 backgroundColor: COLOR.bgRaised,
