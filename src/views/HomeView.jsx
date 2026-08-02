@@ -36,8 +36,20 @@ export default function HomeView({ currentUser, onOpenRace, refreshKey }) {
 
   if (loading) return <FullScreenLoader />;
 
-  const open = races.filter((r) => r.Status === "open");
-  const others = races.filter((r) => r.Status !== "open");
+  // Tri par ordre d'affichage : les courses avec un ordre défini (>0) passent
+  // en premier, triées par ce numéro; les autres suivent par date de création.
+  const sortByOrder = (list) =>
+    [...list].sort((a, b) => {
+      const oa = Number(a.DisplayOrder) || 0;
+      const ob = Number(b.DisplayOrder) || 0;
+      if (oa > 0 && ob > 0) return oa - ob;
+      if (oa > 0) return -1;
+      if (ob > 0) return 1;
+      return new Date(b.CreatedAt) - new Date(a.CreatedAt);
+    });
+
+  const open = sortByOrder(races.filter((r) => r.Status === "open"));
+  const others = sortByOrder(races.filter((r) => r.Status !== "open"));
 
   return (
     <div className="px-4 sm:px-8 py-10 max-w-7xl mx-auto">
