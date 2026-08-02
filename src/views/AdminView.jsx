@@ -39,13 +39,14 @@ function CreateRaceModal({ open, onClose, onCreated }) {
     date: "",
     description: "",
     entryFee: "10",
+    displayOrder: "",
   });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setForm({ name: "", date: "", description: "", entryFee: "10" });
+      setForm({ name: "", date: "", description: "", entryFee: "10", displayOrder: "" });
       setError("");
     }
   }, [open]);
@@ -69,6 +70,7 @@ function CreateRaceModal({ open, onClose, onCreated }) {
         raceDate: form.date || null,
         description: form.description.trim() || null,
         entryFee: fee,
+        displayOrder: Number(form.displayOrder) || 0,
       });
       onCreated();
       onClose();
@@ -88,12 +90,22 @@ function CreateRaceModal({ open, onClose, onCreated }) {
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           placeholder="ex: GP3R - Coupe Nissan Sentra"
         />
-        <Input
-          label="Date (optionnel)"
-          type="date"
-          value={form.date}
-          onChange={(e) => setForm({ ...form, date: e.target.value })}
-        />
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label="Date (optionnel)"
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm({ ...form, date: e.target.value })}
+          />
+          <Input
+            label="Ordre d'affichage"
+            type="number"
+            min="0"
+            value={form.displayOrder}
+            onChange={(e) => setForm({ ...form, displayOrder: e.target.value })}
+            placeholder="ex: 1"
+          />
+        </div>
         <Input
           label="Mise par participant ($)"
           type="number"
@@ -318,7 +330,18 @@ export default function AdminView({ onOpenRace, onOpenPayments, onOpenUsers, ref
         </div>
       ) : (
         <div className="space-y-3">
-          {races.map((r) => {
+          {[...races]
+            .sort((a, b) => {
+              const oa = Number(a.DisplayOrder) || 0;
+              const ob = Number(b.DisplayOrder) || 0;
+              // Les courses avec un ordre défini (>0) passent en premier, triées par ordre
+              if (oa > 0 && ob > 0) return oa - ob;
+              if (oa > 0) return -1;
+              if (ob > 0) return 1;
+              // Sinon, tri par date de création descendante (comportement d'origine)
+              return new Date(b.CreatedAt) - new Date(a.CreatedAt);
+            })
+            .map((r) => {
             const taken = Number(r.ParticipantCount) || 0;
             const total = Number(r.TotalCars) || 0;
             const pot = Number(r.Pot || 0);
@@ -333,6 +356,21 @@ export default function AdminView({ onOpenRace, onOpenPayments, onOpenUsers, ref
               >
                 <div className="flex-1 min-w-[200px]">
                   <div className="flex items-center gap-2 mb-1">
+                    {Number(r.DisplayOrder) > 0 && (
+                      <span
+                        style={{
+                          fontFamily: FONT_MONO,
+                          fontWeight: 800,
+                          backgroundColor: COLOR.bgRaised,
+                          color: COLOR.gold,
+                          padding: "1px 7px",
+                          fontSize: 12,
+                        }}
+                        title="Ordre d'affichage"
+                      >
+                        #{r.DisplayOrder}
+                      </span>
+                    )}
                     <StatusBadge status={r.Status} />
                     {r.RaceDate && (
                       <span className="text-xs" style={{ color: COLOR.muted }}>

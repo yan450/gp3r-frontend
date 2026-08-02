@@ -33,5 +33,6 @@ export const formatDate = (iso) => {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "UTC",
   });
 };

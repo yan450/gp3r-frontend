@@ -49,7 +49,7 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
   const [busy, setBusy] = useState(false);
 
   // Formulaires
-  const [info, setInfo] = useState({ name: "", date: "", description: "", entryFee: "0" });
+  const [info, setInfo] = useState({ name: "", date: "", description: "", entryFee: "0", displayOrder: "" });
   const [carForm, setCarForm] = useState({ number: "", driver: "", position: "" });
   const [bulkInput, setBulkInput] = useState("");
   const [winnerNumber, setWinnerNumber] = useState("");
@@ -64,6 +64,7 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
         date: res.race.RaceDate ? String(res.race.RaceDate).slice(0, 10) : "",
         description: res.race.Description || "",
         entryFee: String(res.race.EntryFee || 0),
+        displayOrder: res.race.DisplayOrder ? String(res.race.DisplayOrder) : "",
       });
       setWinnerNumber(res.race.WinningCarNumber || "");
       setError("");
@@ -111,6 +112,7 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
         raceDate: info.date || null,
         description: info.description.trim() || null,
         entryFee: parseFloat(info.entryFee) || 0,
+        displayOrder: Number(info.displayOrder) || 0,
       });
       await reload();
     });
@@ -234,12 +236,22 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
             value={info.name}
             onChange={(e) => setInfo({ ...info, name: e.target.value })}
           />
-          <Input
-            label="Date"
-            type="date"
-            value={info.date}
-            onChange={(e) => setInfo({ ...info, date: e.target.value })}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Date"
+              type="date"
+              value={info.date}
+              onChange={(e) => setInfo({ ...info, date: e.target.value })}
+            />
+            <Input
+              label="Ordre d'affichage"
+              type="number"
+              min="0"
+              value={info.displayOrder}
+              onChange={(e) => setInfo({ ...info, displayOrder: e.target.value })}
+              placeholder="ex: 1"
+            />
+          </div>
           <Input
             label="Mise par participant ($)"
             type="number"
