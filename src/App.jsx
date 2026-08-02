@@ -15,6 +15,7 @@ import MyRacesView from "./views/MyRacesView.jsx";
 import AdminView from "./views/AdminView.jsx";
 import CartView from "./views/CartView.jsx";
 import PaymentsView from "./views/PaymentsView.jsx";
+import UsersView from "./views/UsersView.jsx";
 
 export default function App() {
   const [bootstrapping, setBootstrapping] = useState(true);
@@ -153,6 +154,7 @@ export default function App() {
         <AdminView
           onOpenRace={handleOpenRace}
           onOpenPayments={() => setView("payments")}
+          onOpenUsers={() => setView("users")}
           refreshKey={refreshKey}
           onChanged={triggerRefresh}
         />
@@ -160,6 +162,15 @@ export default function App() {
 
       {view === "payments" && currentUser.isAdmin && (
         <PaymentsView
+          onBack={() => setView("admin")}
+          refreshKey={refreshKey}
+          onChanged={triggerRefresh}
+        />
+      )}
+
+      {view === "users" && currentUser.isAdmin && (
+        <UsersView
+          currentUserId={currentUser.userId}
           onBack={() => setView("admin")}
           refreshKey={refreshKey}
           onChanged={triggerRefresh}

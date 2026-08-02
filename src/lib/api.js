@@ -125,4 +125,10 @@ export const api = {
   // Admin — utilisateurs
   listUsers: () => get("/api/admin/users"),
   promoteUser: (userId) => post(`/api/admin/users/${userId}/promote`),
+  getUserDetails: (userId) => get(`/api/admin/users/${userId}`),
+  resetUserPassword: (userId, newPassword) =>
+    post(`/api/admin/users/${userId}/reset-password`, { newPassword }),
+  setUserActive: (userId, isActive) =>
+    patch(`/api/admin/users/${userId}/active`, { isActive }),
+  deleteUser: (userId) => del(`/api/admin/users/${userId}`),
 };

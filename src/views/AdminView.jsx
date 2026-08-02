@@ -223,7 +223,7 @@ function UsersModal({ open, onClose, onPromoted }) {
 
 /* -------------------------------------------------------------------------- */
 
-export default function AdminView({ onOpenRace, onOpenPayments, refreshKey, onChanged }) {
+export default function AdminView({ onOpenRace, onOpenPayments, onOpenUsers, refreshKey, onChanged }) {
   const [races, setRaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -278,7 +278,7 @@ export default function AdminView({ onOpenRace, onOpenPayments, refreshKey, onCh
           </h1>
         </div>
         <div className="flex gap-3 flex-wrap">
-          <Btn variant="ghost" onClick={() => setShowUsers(true)}>
+          <Btn variant="ghost" onClick={() => (onOpenUsers ? onOpenUsers() : setShowUsers(true))}>
             <Users size={16} /> Utilisateurs
           </Btn>
           {onOpenPayments && (
