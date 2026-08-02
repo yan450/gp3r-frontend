@@ -372,6 +372,23 @@ export default function AdminView({ onOpenRace, onOpenPayments, onOpenUsers, ref
                       </span>
                     )}
                     <StatusBadge status={r.Status} />
+                    {r.IsArchived && (
+                      <span
+                        style={{
+                          fontFamily: FONT_BODY,
+                          fontWeight: 700,
+                          backgroundColor: "#2a2a30",
+                          color: "#9ca3af",
+                          padding: "2px 8px",
+                          fontSize: 10,
+                          textTransform: "uppercase",
+                          letterSpacing: 1,
+                        }}
+                        title="Masquée pour les utilisateurs"
+                      >
+                        Archivée
+                      </span>
+                    )}
                     {r.RaceDate && (
                       <span className="text-xs" style={{ color: COLOR.muted }}>
                         {formatDate(r.RaceDate)}

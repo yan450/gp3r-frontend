@@ -108,6 +108,10 @@ export const api = {
   revealNumbers: (raceId, reveal) =>
     post(`/api/admin/races/${raceId}/reveal`, { reveal }),
 
+  // Admin — archiver/désarchiver une course
+  archiveRace: (raceId, archived) =>
+    patch(`/api/admin/races/${raceId}/archive`, { archived }),
+
   // Panier / paiements utilisateur
   getCart: () => get("/api/payments/cart"),
   declarePayment: (reference, note) =>

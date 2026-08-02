@@ -4,7 +4,7 @@
 // =============================================================================
 
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Check, Trophy, Sparkles } from "lucide-react";
+import { Plus, Trash2, Check, Trophy, Sparkles, Archive } from "lucide-react";
 import { Modal, Btn, Input, ErrorBanner, StatusBadge } from "../components/UI.jsx";
 import { COLOR, FONT_BODY, FONT_MONO, formatMoney } from "../lib/format.js";
 import { api } from "../lib/api.js";
@@ -141,6 +141,13 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
     safeRun(async () => {
       await api.revealNumbers(raceId, !race.NumbersRevealed);
       await reload();
+    });
+
+  const toggleArchive = () =>
+    safeRun(async () => {
+      await api.archiveRace(raceId, !race.IsArchived);
+      await reload();
+      onChanged?.();
     });
 
   const addBulk = () => {
@@ -605,44 +612,88 @@ export default function RaceManageModal({ raceId, onClose, onChanged }) {
       )}
 
       {tab === "danger" && (
-        <div className="space-y-4">
-          <p style={{ color: COLOR.muted }}>
-            Supprimer définitivement cette course et toutes les pigées
-            associées. Action irréversible.
-          </p>
-          {!confirmDelete ? (
-            <Btn
-              variant="danger"
-              onClick={() => setConfirmDelete(true)}
-              className="w-full"
-              disabled={busy}
-            >
-              <Trash2 size={16} /> Supprimer la course
-            </Btn>
-          ) : (
-            <div className="space-y-3">
-              <p className="font-bold" style={{ color: "#f87171" }}>
-                Es-tu sûr ? Cette action est définitive.
-              </p>
-              <div className="flex gap-2">
-                <Btn
-                  variant="ghost"
-                  onClick={() => setConfirmDelete(false)}
-                  className="flex-1"
-                >
-                  Annuler
-                </Btn>
-                <Btn
-                  variant="danger"
-                  onClick={handleDelete}
-                  className="flex-1"
-                  disabled={busy}
-                >
-                  Oui, supprimer
-                </Btn>
+        <div className="space-y-6">
+          {/* Archivage — moins destructif, proposé en premier */}
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: COLOR.bg,
+              border: `1px solid ${race.IsArchived ? COLOR.gold : COLOR.border}`,
+            }}
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <Archive
+                size={20}
+                style={{ color: race.IsArchived ? COLOR.gold : COLOR.muted }}
+              />
+              <div>
+                <div className="font-bold uppercase tracking-wider text-sm mb-1">
+                  {race.IsArchived ? "Course archivée" : "Archiver la course"}
+                </div>
+                <div className="text-xs" style={{ color: COLOR.muted }}>
+                  {race.IsArchived
+                    ? "Cette course est masquée pour les utilisateurs. Elle reste visible ici dans l'admin."
+                    : "Retire la course de la liste des utilisateurs sans la supprimer. Idéale pour les courses terminées. Réversible à tout moment."}
+                </div>
               </div>
             </div>
-          )}
+            <Btn
+              variant={race.IsArchived ? "gold" : "ghost"}
+              onClick={toggleArchive}
+              disabled={busy}
+              className="w-full"
+            >
+              <Archive size={16} />
+              {race.IsArchived ? "Désarchiver (rendre visible)" : "Archiver la course"}
+            </Btn>
+          </div>
+
+          {/* Suppression définitive */}
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: COLOR.bg,
+              border: `1px solid ${COLOR.border}`,
+            }}
+          >
+            <p className="mb-3" style={{ color: COLOR.muted }}>
+              Supprimer définitivement cette course et toutes les pigées
+              associées. Action irréversible.
+            </p>
+            {!confirmDelete ? (
+              <Btn
+                variant="danger"
+                onClick={() => setConfirmDelete(true)}
+                className="w-full"
+                disabled={busy}
+              >
+                <Trash2 size={16} /> Supprimer la course
+              </Btn>
+            ) : (
+              <div className="space-y-3">
+                <p className="font-bold" style={{ color: "#f87171" }}>
+                  Es-tu sûr ? Cette action est définitive.
+                </p>
+                <div className="flex gap-2">
+                  <Btn
+                    variant="ghost"
+                    onClick={() => setConfirmDelete(false)}
+                    className="flex-1"
+                  >
+                    Annuler
+                  </Btn>
+                  <Btn
+                    variant="danger"
+                    onClick={handleDelete}
+                    className="flex-1"
+                    disabled={busy}
+                  >
+                    Oui, supprimer
+                  </Btn>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </Modal>
