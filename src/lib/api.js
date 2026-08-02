@@ -108,6 +108,20 @@ export const api = {
   revealNumbers: (raceId, reveal) =>
     post(`/api/admin/races/${raceId}/reveal`, { reveal }),
 
+  // Panier / paiements utilisateur
+  getCart: () => get("/api/payments/cart"),
+  declarePayment: (reference, note) =>
+    post("/api/payments/declare", { reference, note }),
+
+  // Admin — paiements
+  listPendingPayments: () => get("/api/admin/payments/pending"),
+  confirmPayment: (paymentId, adminNote) =>
+    post(`/api/admin/payments/${paymentId}/confirm`, { adminNote }),
+  rejectPayment: (paymentId, adminNote) =>
+    post(`/api/admin/payments/${paymentId}/reject`, { adminNote }),
+  suspendUser: (userId, suspended) =>
+    patch(`/api/admin/users/${userId}/suspend`, { suspended }),
+
   // Admin — utilisateurs
   listUsers: () => get("/api/admin/users"),
   promoteUser: (userId) => post(`/api/admin/users/${userId}/promote`),

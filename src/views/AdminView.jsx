@@ -10,6 +10,7 @@ import {
   Settings,
   Eye,
   Flag,
+  Wallet,
 } from "lucide-react";
 import {
   Btn,
@@ -222,7 +223,7 @@ function UsersModal({ open, onClose, onPromoted }) {
 
 /* -------------------------------------------------------------------------- */
 
-export default function AdminView({ onOpenRace, refreshKey, onChanged }) {
+export default function AdminView({ onOpenRace, onOpenPayments, refreshKey, onChanged }) {
   const [races, setRaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -276,10 +277,15 @@ export default function AdminView({ onOpenRace, refreshKey, onChanged }) {
             Pilotage
           </h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <Btn variant="ghost" onClick={() => setShowUsers(true)}>
             <Users size={16} /> Utilisateurs
           </Btn>
+          {onOpenPayments && (
+            <Btn variant="ghost" onClick={onOpenPayments}>
+              <Wallet size={16} /> Paiements
+            </Btn>
+          )}
           <Btn onClick={() => setShowCreate(true)}>
             <Plus size={16} /> Nouvelle course
           </Btn>
